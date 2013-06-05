@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:sec="http://www.springframework.org/schema/security"	
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+						http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+						http://www.springframework.org/schema/context
+						http://www.springframework.org/schema/context/spring-context-3.0.xsd
+						http://www.springframework.org/schema/mvc
+						http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+						http://www.springframework.org/schema/tx
+						http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+						http://www.springframework.org/schema/security 
+						http://www.springframework.org/schema/security/spring-security-3.0.xsd">						
+
+	<context:component-scan base-package="br.com.spark.controller" />
+	
+	<!-- Enable annotation driven controllers, validation etc... -->
+	<mvc:annotation-driven conversion-service="formattingConverters"/>
+	<bean id="formattingConverters"  class="br.com.spark.formatter.FormattingConverters" />
+	
+	<bean id="authenticationSuccessHandler" class="br.com.spark.authenticator.CustomAuthenticationSuccessHandler">
+	  <property name="defaultTargetUrl" value="/pages/home.do"/>
+	</bean>	
+	<bean id="authenticationFailureHandler" class="br.com.spark.authenticator.CustomAuthenticationFailureHandler" />
+		
+	<sec:http auto-config="true">
+		<sec:form-login login-page="/index.jsp" 
+						authentication-success-handler-ref="authenticationSuccessHandler" 
+						authentication-failure-handler-ref="authenticationFailureHandler" /> 
+		<sec:intercept-url pattern="/pages/**" access="ROLE_ACCESS" /> 
+	</sec:http>
+	
+	<bean id='myAuthenticationProvider' class='br.com.spark.authenticator.MyAuthenticationProvider'/>
+	<sec:authentication-manager>
+		<sec:authentication-provider ref='myAuthenticationProvider'/>
+	</sec:authentication-manager>	
+	
+	
+	<!-- misc -->
+	<bean id="viewResolver" 
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+	    <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+	    <property name="prefix" value="/WEB-INF/views/"/> 
+	    <property name="suffix" value=".jsp"/>
+	</bean>
+	
+	<bean id="messageSource"
+		class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basename" value="/WEB-INF/messages" />
+	</bean>
+	
+	<!-- Configure the multipart resolver 
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">      
+    </bean>-->
+    
+    
+    <!-- Desenvolvimento -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">	
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:mysql://localhost:3306/spark" />
+		<property name="username" value="root" />
+		<property name="password" value="root" />
+	</bean>
+	
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+	<bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		 <property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		 <property name="dataSource" ref="dataSource" />
+		 <property name="hibernateProperties">
+			 <props>
+			 	<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+			 	<prop key="hibernate.max_fetch_depth">3</prop>
+			 	<prop key="hibernate.jdbc.fetch_size">50</prop>
+			 	<prop key="hibernate.jdbc.batch_size">10</prop>
+			 	<prop key="hibernate.show_sql">true</prop>
+			 </props>
+		 </property>
+		 <property name="annotatedClasses">
+     		<list>
+       			<value>br.com.spark.model.Perfil</value>
+       			<value>br.com.spark.model.Usuario</value>
+       			<value>br.com.spark.model.Aparelho</value>
+       			<value>br.com.spark.model.Manutencao</value>
+				<value>br.com.spark.model.Prevencao</value>
+		     </list>
+   		 </property>
+	</bean>	
+	
+	<bean id="perfilDao" class="br.com.spark.dao.impl.PerfilDao">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	<bean id="usuarioDao" class="br.com.spark.dao.impl.UsuarioDao">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	<bean id="aparelhoDao" class="br.com.spark.dao.impl.AparelhoDao">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	<bean id="manutencaoDao" class="br.com.spark.dao.impl.ManutencaoDao">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>	
+	<bean id="prevencaoDao" class="br.com.spark.dao.impl.PrevencaoDao">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>		
+	
+	
+</beans>
